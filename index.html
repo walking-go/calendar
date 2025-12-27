@@ -3,289 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>拾光日历 | 精准同步版</title>
+    <title>拾光日历 | Pure Aesthetic</title>
     <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.12.0/dist/av-min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         :root {
-            --primary: #5c7cfa; --st-green: #a8dab5; --st-blue: #a1c4fd; --st-red: #f9b2b2;   
-            --bg-base: #f0f2f5; --text-main: #374151; --text-muted: #9ca3af; --white: #ffffff;
-            --font-size-sm: clamp(11px, 0.8vw, 14px);
+            --bg-main: #f2f2f7; --card-bg: #ffffff;
+            --text-title: #1d1d1f; --text-sub: #86868b;
+            --accent: #0071e3;
+            /* 状态色：水彩清透系 */
+            --st-green: #d1fae5; --st-green-txt: #065f46;
+            --st-blue: #dbeafe; --st-blue-txt: #1e40af;
+            --st-red: #fee2e2; --st-red-txt: #991b1b;
         }
-        body { margin: 0; font-family: 'PingFang SC', sans-serif; background: var(--bg-base); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
-        .navbar { height: 70px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); display: flex; justify-content: center; gap: 20px; align-items: center; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #e5e7eb; }
-        .nav-btn { font-size: 1rem; color: #6b7280; cursor: pointer; padding: 10px 25px; border-radius: 50px; border: none; background: transparent; transition: 0.3s; }
-        .nav-btn.active { color: var(--primary); background: var(--white); box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-weight: 600; }
-        .view-selector { display: flex; background: #e5e7eb; border-radius: 12px; padding: 3px; margin: 20px auto; width: fit-content; }
-        .view-opt { padding: 8px 24px; font-size: 0.9rem; cursor: pointer; border-radius: 10px; transition: 0.2s; }
-        .view-opt.active { background: var(--white); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .container { width: 95%; max-width: 1200px; margin: 0 auto 50px; flex: 1; }
-        .main-card { background: var(--white); border-radius: 30px; padding: clamp(20px, 3vw, 40px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
-        .day-cell { min-height: 140px; border-radius: 18px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; background: #f9fafb; border: 1.5px solid transparent; overflow: hidden; transition: 0.2s; }
-        .day-cell.is-today { border-color: var(--primary); background: #fff; box-shadow: 0 4px 12px rgba(92, 124, 250, 0.1); }
-        .day-cell.mark-green { border-bottom: 6px solid var(--st-green); }
-        .day-cell.mark-blue { border-bottom: 6px solid var(--st-blue); }
-        .day-cell.mark-red { border-bottom: 6px solid var(--st-red); }
-        .cell-num { font-size: 1.1rem; font-weight: 700; color: #9ca3af; }
-        .cell-summary { font-size: var(--font-size-sm); color: #4b5563; margin-top: 5px; font-style: italic; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-        .week-view-row { display: flex !important; flex-direction: row !important; align-items: center !important; min-height: 80px !important; margin-bottom: 12px; padding: 15px 25px !important; gap: 30px; }
-        .editor-card { background: var(--white); border-radius: 30px; padding: clamp(20px, 4vw, 50px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
-        .task-row { display: flex; align-items: center; padding: 14px; border-bottom: 1px solid #f3f4f6; background: white; cursor: grab; }
-        .task-index { font-family: monospace; font-weight: bold; color: var(--primary); width: 30px; }
-        .task-input { flex: 1; border: none; outline: none; font-size: 1.1rem; background: transparent; padding: 0 10px; }
-        .task-input.completed { text-decoration: line-through; color: var(--text-muted); }
-        .task-checkbox { width: 24px; height: 24px; border: 2.5px solid #ddd; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .task-checkbox.checked { background: var(--primary); border-color: var(--primary); }
-        .task-checkbox.checked::after { content: '✓'; color: white; font-size: 14px; }
-        .task-del { color: #eee; cursor: pointer; margin-left: 15px; }
-        .save-btn { width: 100%; max-width: 400px; display: block; margin: 40px auto 0; padding: 18px; background: var(--text-main); color: #fff; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
-        .sync-status { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-top: 20px; }
-        @media (max-width: 768px) { .day-cell { min-height: 100px; } .nav-btn { padding: 8px 15px; } }
+
+        body { 
+            margin: 0; font-family: -apple-system, "SF Pro SC", "SF Pro Display", "PingFang SC", sans-serif; 
+            background: var(--bg-main); color: var(--text-title); -webkit-font-smoothing: antialiased;
+        }
+
+        /* 状态类名 */
+        .mark-green { background: var(--st-green) !important; color: var(--st-green-txt) !important; }
+        .mark-blue { background: var(--st-blue) !important; color: var(--st-blue-txt) !important; }
+        .mark-red { background: var(--st-red) !important; color: var(--st-red-txt) !important; }
+
+        /* 呼吸感导航 */
+        .header {
+            height: 60px; background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px);
+            display: flex; justify-content: center; gap: 40px; align-items: center;
+            position: sticky; top: 0; z-index: 100; border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .header-btn {
+            font-size: 0.95rem; border: none; background: none; color: var(--text-sub);
+            padding: 6px 16px; cursor: pointer; border-radius: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .header-btn.active { color: var(--accent); background: rgba(0, 113, 227, 0.1); font-weight: 600; }
+
+        .container { width: 94%; max-width: 800px; margin: 24px auto; }
+
+        /* 月视图：极简细线 */
+        .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .day-cell {
+            background: var(--card-bg); border-radius: 14px; padding: 10px; min-height: 105px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); cursor: pointer; transition: 0.3s;
+            display: flex; flex-direction: column; border: 0.5px solid rgba(0,0,0,0.05);
+        }
+        .day-cell:active { transform: scale(0.96); opacity: 0.8; }
+        .day-cell.today { border: 2px solid var(--accent); }
+        .cell-num { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; color: var(--text-sub); }
+        .cell-summary { font-size: 0.75rem; line-height: 1.4; opacity: 0.8; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+        /* 周视图：纯净卡片流 */
+        .week-list { display: flex; flex-direction: column; gap: 14px; }
+        .week-card {
+            background: var(--card-bg); border-radius: 18px; padding: 18px;
+            display: flex; align-items: center; gap: 18px; border: 0.5px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); cursor: pointer;
+        }
+        .week-date-box { 
+            min-width: 55px; height: 55px; background: var(--bg-main); 
+            border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .week-date-num { font-size: 1.3rem; font-weight: 700; }
+        .week-date-day { font-size: 0.7rem; font-weight: 500; opacity: 0.6; }
+
+        /* 编辑视图 */
+        .editor-card { background: var(--card-bg); border-radius: 24px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.06); }
+        .task-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 0.5px solid #f2f2f7; }
+        .task-idx { color: var(--text-sub); width: 35px; font-size: 0.9rem; font-weight: 500; }
+        .task-input { flex: 1; border: none; outline: none; font-size: 1rem; color: var(--text-title); background: transparent; }
+        .task-check { 
+            width: 22px; height: 22px; border: 1.5px solid #d2d2d7; border-radius: 6px;
+            cursor: pointer; transition: 0.2s; margin-left: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        .task-check.done { background: var(--accent); border-color: var(--accent); }
+        .task-check.done::after { content: '✓'; color: white; font-size: 14px; font-weight: bold; }
+        .task-input.completed { text-decoration: line-through; color: var(--text-sub); opacity: 0.5; }
+
+        /* 奶油感标签按钮 */
+        .tag-row { display: flex; gap: 10px; margin-top: 30px; }
+        .tag-btn { 
+            flex: 1; padding: 12px; border-radius: 12px; border: none; 
+            text-align: center; font-size: 0.9rem; cursor: pointer; transition: 0.3s;
+            background: #f2f2f7; color: var(--text-sub); font-weight: 500;
+        }
+        .tag-btn.active[data-tag="green"] { background: var(--st-green); color: var(--st-green-txt); }
+        .tag-btn.active[data-tag="blue"] { background: var(--st-blue); color: var(--st-blue-txt); }
+        .tag-btn.active[data-tag="red"] { background: var(--st-red); color: var(--st-red-txt); }
+
+        .save-btn {
+            width: 100%; padding: 16px; background: var(--text-title); color: white;
+            border: none; border-radius: 14px; font-size: 1rem; font-weight: 600;
+            margin-top: 32px; cursor: pointer; transition: opacity 0.3s;
+        }
+        .save-btn:active { opacity: 0.8; }
+
+        .sync-status { text-align: center; font-size: 0.75rem; color: var(--text-sub); margin-top: 24px; }
+
+        @media (max-width: 768px) {
+            .container { width: 92%; }
+            .day-cell { min-height: 90px; }
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <button class="nav-btn active" id="nav-home" onclick="handleNav('home')">首页月历</button>
-        <button class="nav-btn" id="nav-today" onclick="handleNav('editor')">当日任务</button>
+    <nav class="header">
+        <button class="header-btn active" id="btn-home" onclick="navTo('home')">首页</button>
+        <button class="header-btn" id="btn-today" onclick="navTo('editor')">今日任务</button>
     </nav>
 
     <div class="container">
         <div id="view-home">
-            <div class="view-selector">
-                <div class="view-opt" id="opt-month" onclick="changeHomeView('month')">月视图</div>
-                <div class="view-opt" id="opt-week" onclick="changeHomeView('week')">周视图</div>
-            </div>
-            <div class="main-card">
-                <div class="cal-header">
-                    <button onclick="moveTime(-1)" style="border:none;background:none;font-size:1.8rem;">⇠</button>
-                    <h3 id="time-label">正在连接...</h3>
-                    <button onclick="moveTime(1)" style="border:none;background:none;font-size:1.8rem;">⇢</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 id="time-title" style="margin:0; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;"></h2>
+                <div style="display: flex; gap: 5px; background: #e5e5ea; padding: 3px; border-radius: 9px;">
+                    <button id="m-toggle" onclick="setMode('month')" style="border:none; padding:6px 12px; border-radius:7px; font-size:0.75rem; cursor:pointer; font-weight:600;">月历</button>
+                    <button id="w-toggle" onclick="setMode('week')" style="border:none; padding:6px 12px; border-radius:7px; font-size:0.75rem; cursor:pointer; font-weight:600;">周历</button>
                 </div>
-                <div id="weekday-labels" style="display:grid; grid-template-columns: repeat(7, 1fr); text-align:center; font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">
-                    <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
-                </div>
-                <div id="display-grid" class="grid"></div>
-                <div class="sync-status" id="sync-status">离线模式</div>
             </div>
+            <div id="home-content"></div>
+            <div class="sync-status" id="sync-info">☁️ 同步就绪</div>
         </div>
 
-        <div id="view-editor" style="display:none">
+        <div id="view-editor" style="display: none;">
             <div class="editor-card">
-                <span style="color:var(--text-muted); cursor:pointer;" onclick="handleNav('home')">← 返回</span>
-                <h2 id="edit-date-title" style="text-align:center; color:var(--primary); margin: 20px 0;"></h2>
-                <div id="task-list"></div>
-                <div style="text-align:center; color:var(--text-muted); cursor:pointer; font-size:2rem; margin-top:10px;" onclick="addTask()">+</div>
-                <div style="background:#f9fafb; padding:20px; border-radius:20px; margin-top:20px;">
-                    <input type="text" id="inp-sum" style="width:100%; border:none; outline:none; background:transparent; font-size:1.1rem;" placeholder="今日一句话总结...">
+                <div onclick="navTo('home')" style="color:var(--accent); font-size:0.9rem; font-weight:500; cursor:pointer; margin-bottom:24px;">← 返回</div>
+                <h3 id="edit-date" style="margin: 0 0 24px 0; text-align: center; font-size: 1.5rem; font-weight: 700;"></h3>
+                <div id="task-box"></div>
+                <div onclick="addItem()" style="text-align:center; color:var(--accent); font-size:2.5rem; cursor:pointer; line-height:1; margin-top:10px;">+</div>
+                
+                <div style="margin-top: 24px;">
+                    <textarea id="edit-sum" style="width:100%; border:none; background:var(--bg-main); border-radius:14px; padding:18px; outline:none; box-sizing:border-box; font-size:1rem; color:var(--text-title); line-height:1.5;" placeholder="写下今日的一句话总结..."></textarea>
                 </div>
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <div class="tag-pill" style="flex:1; border:1px solid #eee; text-align:center; padding:12px; border-radius:12px; cursor:pointer;" data-tag="green" onclick="selectTag('green')">🌿 充实</div>
-                    <div class="tag-pill" style="flex:1; border:1px solid #eee; text-align:center; padding:12px; border-radius:12px; cursor:pointer;" data-tag="blue" onclick="selectTag('blue')">💧 平稳</div>
-                    <div class="tag-pill" style="flex:1; border:1px solid #eee; text-align:center; padding:12px; border-radius:12px; cursor:pointer;" data-tag="red" onclick="selectTag('red')">🍂 低迷</div>
+                
+                <div class="tag-row">
+                    <div class="tag-btn" data-tag="green" onclick="setTag('green')">充实</div>
+                    <div class="tag-btn" data-tag="blue" onclick="setTag('blue')">平稳</div>
+                    <div class="tag-btn" data-tag="red" onclick="setTag('red')">低迷</div>
                 </div>
-                <button class="save-btn" id="btn-save" onclick="saveData()">确认保存</button>
+                <button class="save-btn" onclick="handleSave()">保存</button>
             </div>
         </div>
     </div>
 
 <script>
-    // --- 初始化 ---
-    const APP_ID = "bcAx6bqlbWuUW6pVaBwRyRWU-gzGzoHsz";
-    const APP_KEY = "cmzEQp0JhWvP7qNLd90hHKW2";
-    const SERVER_URL = "https://bcax6bql.lc-cn-n1-shared.com";
-    AV.init({ appId: APP_ID, appKey: APP_KEY, serverURL: SERVER_URL });
+    // --- 配置保持一致 ---
+    AV.init({
+        appId: "bcAx6bqlbWuUW6pVaBwRyRWU-gzGzoHsz",
+        appKey: "cmzEQp0JhWvP7qNLd90hHKW2",
+        serverURL: "https://bcax6bql.lc-cn-n1-shared.com"
+    });
 
-    let db = JSON.parse(localStorage.getItem('TIME_STATION_V6')) || {};
-    let anchorDate = new Date();
-    let editingKey = ""; 
-    let activeTag = ""; 
-    let snapshot = ""; // 用于检测是否有修改的镜像
-    
-    const isMobile = /Android|iPhone/i.test(navigator.userAgent);
-    let currentMode = isMobile ? 'week' : 'month';
+    let db = JSON.parse(localStorage.getItem('TS_DATA_V11')) || {};
+    let anchor = new Date();
+    let editKey = "";
+    let activeTag = "";
+    let snapshot = "";
+    let mode = window.innerWidth < 768 ? 'week' : 'month';
 
-    window.onload = function() {
-        renderUI();
-        pullFromCloud();
-        Sortable.create(document.getElementById('task-list'), { animation: 150, onEnd: updateIndices });
-        // 预热连接
-        AV.Cloud.getServerDate().catch(()=>{});
+    window.onload = () => {
+        setMode(mode);
+        pull();
+        Sortable.create(document.getElementById('task-box'), { animation: 150, onEnd: reindex });
     };
 
-    // --- 云端核心 ---
-    async function pullFromCloud() {
-        const status = document.getElementById('sync-status');
+    async function pull() {
         try {
-            const query = new AV.Query('CalendarLog').equalTo('user_id', 'default_user');
-            const result = await Promise.race([query.first(), new Promise((_, r) => setTimeout(() => r('timeout'), 5000))]);
-            if (result) {
-                db = JSON.parse(result.get('content'));
-                localStorage.setItem('TIME_STATION_V6', JSON.stringify(db));
-                renderUI();
-                status.innerText = "✨ 云端已同步";
+            const q = new AV.Query('CalendarLog').equalTo('user_id', 'default_user');
+            const res = await q.first();
+            if(res) {
+                db = JSON.parse(res.get('content'));
+                localStorage.setItem('TS_DATA_V11', JSON.stringify(db));
+                refresh();
+                document.getElementById('sync-info').innerText = "✨ 云端同步完成";
             }
-        } catch (e) { status.innerText = "🌙 离线模式"; }
+        } catch(e) { document.getElementById('sync-info').innerText = "🌙 本地编辑模式"; }
     }
 
-    async function pushToCloud() {
+    async function push() {
         try {
-            const query = new AV.Query('CalendarLog').equalTo('user_id', 'default_user');
-            let log = await query.first() || new (AV.Object.extend('CalendarLog'))({ user_id: 'default_user' });
+            const q = new AV.Query('CalendarLog').equalTo('user_id', 'default_user');
+            let log = await q.first() || new (AV.Object.extend('CalendarLog'))({user_id: 'default_user'});
             log.set('content', JSON.stringify(db));
             await log.save();
-            document.getElementById('sync-status').innerText = "✨ 同步于 " + new Date().toLocaleTimeString();
-        } catch (e) { document.getElementById('sync-status').innerText = "⚠️ 后台保存失败"; }
+        } catch(e) { console.error("Cloud push failed"); }
     }
 
-    // --- 界面逻辑 ---
-    function renderUI() {
-        const grid = document.getElementById('display-grid'); grid.innerHTML = "";
-        const y = anchorDate.getFullYear(), m = anchorDate.getMonth();
+    function setMode(m) {
+        mode = m;
+        document.getElementById('m-toggle').style.background = m === 'month' ? '#fff' : 'transparent';
+        document.getElementById('m-toggle').style.boxShadow = m === 'month' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none';
+        document.getElementById('w-toggle').style.background = m === 'week' ? '#fff' : 'transparent';
+        document.getElementById('w-toggle').style.boxShadow = m === 'week' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none';
+        refresh();
+    }
+
+    function refresh() {
+        const container = document.getElementById('home-content'); container.innerHTML = "";
         const now = new Date(); now.setHours(0,0,0,0);
 
-        if (currentMode === 'month') {
-            document.getElementById('time-label').innerText = `${y}年${m+1}月`;
-            let first = (new Date(y, m, 1).getDay() || 7) - 1;
-            for(let i=0; i<first; i++) grid.appendChild(document.createElement('div'));
-            for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
-                grid.appendChild(createCell(new Date(y, m, d), `${y}-${m+1}-${d}`, now));
+        if(mode === 'month') {
+            document.getElementById('time-title').innerText = `${anchor.getFullYear()}年${anchor.getMonth()+1}月`;
+            container.className = "month-grid";
+            let first = (new Date(anchor.getFullYear(), anchor.getMonth(), 1).getDay() || 7) - 1;
+            for(let i=0; i<first; i++) container.appendChild(document.createElement('div'));
+            for(let d=1; d<=new Date(anchor.getFullYear(), anchor.getMonth()+1, 0).getDate(); d++) {
+                container.appendChild(buildCell(new Date(anchor.getFullYear(), anchor.getMonth(), d), now));
             }
         } else {
-            document.getElementById('time-label').innerText = "本周";
-            let start = new Date(anchorDate); start.setDate(start.getDate() - (start.getDay() || 7) + 1);
+            document.getElementById('time-title').innerText = "本周记录";
+            container.className = "week-list";
+            let start = new Date(anchor); start.setDate(start.getDate() - (start.getDay() || 7) + 1);
             for(let i=0; i<7; i++) {
                 let d = new Date(start); d.setDate(start.getDate() + i);
-                let cell = createCell(d, `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`, now);
-                cell.classList.add('week-view-row');
-                grid.appendChild(cell);
+                container.appendChild(buildWeekCard(d, now));
             }
         }
     }
 
-    function createCell(dateObj, key, now) {
+    function buildCell(d, now) {
+        const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
         const data = db[key] || {};
-        const cell = document.createElement('div');
-        cell.className = `day-cell ${dateObj.getTime()===now.getTime()?'is-today':''} ${data.tag?'mark-'+data.tag:''}`;
-        const label = currentMode==='week' ? `${dateObj.getMonth()+1}/${dateObj.getDate()} 周${['日','一','二','三','四','五','六'][dateObj.getDay()]}` : dateObj.getDate();
-        cell.innerHTML = `<div class="cell-num">${label}</div><div class="cell-summary">${data.summary || ""}</div>`;
-        cell.onclick = () => openEditor(key);
-        return cell;
+        const el = document.createElement('div');
+        el.className = `day-cell ${d.getTime()===now.getTime()?'today':''} ${data.tag ? 'mark-'+data.tag : ''}`;
+        el.innerHTML = `<div class="cell-num">${d.getDate()}</div><div class="cell-summary">${data.summary||''}</div>`;
+        el.onclick = () => open(key);
+        return el;
     }
 
-    function openEditor(key) {
-        editingKey = key;
-        const data = db[key] || { tasks: [], summary: "", tag: "" };
-        document.getElementById('edit-date-title').innerText = key.replace(/-/g, ' / ');
-        const list = document.getElementById('task-list'); list.innerHTML = "";
-        
-        // 如果没有任务，默认给一行空的，但不计入 snapshot，防止误触
-        const displayTasks = data.tasks.length ? data.tasks : [{text:'', done:false}];
-        displayTasks.forEach(t => addTask(t));
-        
-        document.getElementById('inp-sum').value = data.summary || "";
-        selectTag(data.tag || '');
-        
-        // **快照：记录进入时的状态**
-        snapshot = getEditorStateString();
-
-        document.getElementById('view-home').style.display = 'none';
-        document.getElementById('view-editor').style.display = 'block';
-        document.getElementById('nav-home').classList.remove('active');
-        document.getElementById('nav-today').classList.add('active');
-    }
-
-    // 获取当前编辑页所有数据的字符串形式，用于比对
-    function getEditorStateString() {
-        const tasks = Array.from(document.querySelectorAll('.task-row')).map(row => ({
-            text: row.querySelector('.task-input').value,
-            done: row.querySelector('.task-checkbox').classList.contains('checked')
-        })).filter(t => t.text.trim());
-        const sum = document.getElementById('inp-sum').value.trim();
-        return JSON.stringify({ tasks, sum, tag: activeTag });
-    }
-
-    function addTask(t = {text: '', done: false}) {
-        const row = document.createElement('div');
-        row.className = 'task-row';
-        row.innerHTML = `
-            <div class="task-index"></div>
-            <input type="text" class="task-input ${t.done?'completed':''}" value="${t.text}" placeholder="写点什么...">
-            <div class="task-checkbox ${t.done?'checked':''}" onclick="toggleDone(this)"></div>
-            <div class="task-del" onclick="this.parentElement.remove();updateIndices();">✕</div>
+    function buildWeekCard(d, now) {
+        const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+        const data = db[key] || {};
+        const el = document.createElement('div');
+        el.className = `week-card ${data.tag ? 'mark-'+data.tag : ''}`;
+        if(d.getTime()===now.getTime()) el.style.borderColor = "var(--accent)";
+        const week = ['日','一','二','三','四','五','六'][d.getDay()];
+        el.innerHTML = `
+            <div class="week-date-box" style="${data.tag ? 'background:rgba(255,255,255,0.4)':''}">
+                <div class="week-date-num">${d.getDate()}</div>
+                <div class="week-date-day">周${week}</div>
+            </div>
+            <div style="flex:1">
+                <div style="font-size:1.05rem;font-weight:600;">${data.summary || '今日小记...'}</div>
+                <div style="font-size:0.8rem;opacity:0.6;margin-top:2px;">完成 ${ (data.tasks||[]).filter(t=>t.done).length } / ${ (data.tasks||[]).length }</div>
+            </div>
         `;
-        document.getElementById('task-list').appendChild(row);
-        updateIndices();
+        el.onclick = () => open(key);
+        return el;
     }
 
-    function updateIndices() {
-        document.querySelectorAll('.task-index').forEach((el, i) => el.innerText = String(i+1).padStart(2,'0'));
+    function open(key) {
+        editKey = key;
+        const data = db[key] || {tasks:[], summary:"", tag:""};
+        document.getElementById('edit-date').innerText = key.replace(/-/g, ' . ');
+        const box = document.getElementById('task-box'); box.innerHTML = "";
+        (data.tasks.length ? data.tasks : [{text:"", done:false}]).forEach(t => addItem(t));
+        document.getElementById('edit-sum').value = data.summary || "";
+        setTag(data.tag || "");
+        snapshot = getEditorStr();
+        navTo('editor');
     }
 
-    function toggleDone(el) {
-        el.classList.toggle('checked');
-        el.previousElementSibling.classList.toggle('completed');
+    function addItem(t = {text:"", done:false}) {
+        const div = document.createElement('div');
+        div.className = "task-item";
+        div.innerHTML = `
+            <div class="task-idx">01</div>
+            <input type="text" class="task-input ${t.done?'completed':''}" value="${t.text}" placeholder="添加任务...">
+            <div class="task-check ${t.done?'done':''}" onclick="this.classList.toggle('done'); this.previousElementSibling.classList.toggle('completed');"></div>
+            <div onclick="this.parentElement.remove();reindex();" style="color:#ff3b30;margin-left:12px;cursor:pointer;font-size:1rem;opacity:0.3;">✕</div>
+        `;
+        document.getElementById('task-box').appendChild(div);
+        reindex();
     }
 
-    function selectTag(t) {
+    function reindex() {
+        document.querySelectorAll('.task-idx').forEach((el, i) => el.innerText = String(i+1).padStart(2,'0'));
+    }
+
+    function setTag(t) {
         activeTag = t;
-        document.querySelectorAll('.tag-pill').forEach(p => {
-            p.style.background = p.dataset.tag === t ? 'var(--primary)' : '#fff';
-            p.style.color = p.dataset.tag === t ? '#fff' : '#000';
-        });
+        document.querySelectorAll('.tag-btn').forEach(b => b.classList.toggle('active', b.dataset.tag === t));
     }
 
-    async function saveData() {
-        const tasks = Array.from(document.querySelectorAll('.task-row')).map(row => ({
-            text: row.querySelector('.task-input').value,
-            done: row.querySelector('.task-checkbox').classList.contains('checked')
+    function getEditorStr() {
+        const ts = Array.from(document.querySelectorAll('.task-item')).map(el => ({
+            text: el.querySelector('.task-input').value,
+            done: el.querySelector('.task-check').classList.contains('done')
         })).filter(t => t.text.trim());
-        
-        const sum = document.getElementById('inp-sum').value.trim();
-        db[editingKey] = { tasks, summary: sum, tag: activeTag };
-        localStorage.setItem('TIME_STATION_V6', JSON.stringify(db));
-        
-        // 更新 snapshot 避免离开时提示
-        snapshot = getEditorStateString();
-        
-        document.getElementById('sync-status').innerText = "☁️ 正在同步...";
-        handleNav('home');
-        pushToCloud();
+        return JSON.stringify({ts, sum: document.getElementById('edit-sum').value.trim(), tag: activeTag});
     }
 
-    function handleNav(target) {
-        if (target === 'home') {
-            // 如果在编辑器，检查修改
-            if (document.getElementById('view-editor').style.display === 'block') {
-                if (getEditorStateString() !== snapshot) {
-                    if (!confirm("修改尚未保存，确定离开吗？")) return;
-                }
-            }
-            document.getElementById('view-home').style.display = 'block';
-            document.getElementById('view-editor').style.display = 'none';
-            document.getElementById('nav-home').classList.add('active');
-            document.getElementById('nav-today').classList.remove('active');
-            renderUI();
-        } else {
-            const n = new Date();
-            openEditor(`${n.getFullYear()}-${n.getMonth()+1}-${n.getDate()}`);
+    async function handleSave() {
+        const s = JSON.parse(getEditorStr());
+        db[editKey] = {tasks: s.ts, summary: s.sum, tag: s.tag};
+        localStorage.setItem('TS_DATA_V11', JSON.stringify(db));
+        snapshot = getEditorStr();
+        document.getElementById('sync-info').innerText = "☁️ 正在保存...";
+        navTo('home');
+        push();
+    }
+
+    function navTo(t) {
+        if(t === 'home' && document.getElementById('view-editor').style.display === 'block') {
+            if(getEditorStr() !== snapshot && !confirm("尚未保存，确定离开？")) return;
         }
-    }
-
-    function changeHomeView(mode) {
-        currentMode = mode;
-        document.getElementById('opt-month').classList.toggle('active', mode==='month');
-        document.getElementById('opt-week').classList.toggle('active', mode==='week');
-        document.getElementById('weekday-labels').style.display = mode==='month' ? 'grid' : 'none';
-        renderUI();
-    }
-
-    function moveTime(s) {
-        if(currentMode==='month') anchorDate.setMonth(anchorDate.getMonth()+s);
-        else anchorDate.setDate(anchorDate.getDate()+s*7);
-        renderUI();
+        document.getElementById('view-home').style.display = t === 'home' ? 'block' : 'none';
+        document.getElementById('view-editor').style.display = t === 'editor' ? 'block' : 'none';
+        document.getElementById('btn-home').className = `header-btn ${t==='home'?'active':''}`;
+        document.getElementById('btn-today').className = `header-btn ${t==='editor'?'active':''}`;
+        if(t === 'home') refresh();
+        else if(t === 'editor' && editKey === "") open(`${new Date().getFullYear()}-${new Date().getMonth()+1}-${new Date().getDate()}`);
     }
 </script>
 </body>
