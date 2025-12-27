@@ -3,364 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>拾光日历 | Pro 云端同步版</title>
+    <title>拾光日历 | 精准同步版</title>
     <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.12.0/dist/av-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         :root {
-            --primary: #5c7cfa;
-            --st-green: #a8dab5; --st-blue: #a1c4fd; --st-red: #f9b2b2;   
-            --bg-base: #f0f2f5; --text-main: #374151; --text-muted: #9ca3af;
-            --white: #ffffff; --danger: #ff6b6b;
-            /* 响应式字体 */
-            --font-size-base: clamp(14px, 1vw, 18px);
+            --primary: #5c7cfa; --st-green: #a8dab5; --st-blue: #a1c4fd; --st-red: #f9b2b2;   
+            --bg-base: #f0f2f5; --text-main: #374151; --text-muted: #9ca3af; --white: #ffffff;
             --font-size-sm: clamp(11px, 0.8vw, 14px);
         }
-
-        body { 
-            margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; 
-            background: var(--bg-base); color: var(--text-main); 
-            min-height: 100vh; display: flex; flex-direction: column; 
-            font-size: var(--font-size-base);
-        }
-
-        /* 顶部导航 */
-        .navbar { 
-            height: 70px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); 
-            display: flex; justify-content: center; gap: 2vw; align-items: center; 
-            position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #e5e7eb; 
-        }
+        body { margin: 0; font-family: 'PingFang SC', sans-serif; background: var(--bg-base); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+        .navbar { height: 70px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); display: flex; justify-content: center; gap: 20px; align-items: center; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #e5e7eb; }
         .nav-btn { font-size: 1rem; color: #6b7280; cursor: pointer; padding: 10px 25px; border-radius: 50px; border: none; background: transparent; transition: 0.3s; }
         .nav-btn.active { color: var(--primary); background: var(--white); box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-weight: 600; }
-
         .view-selector { display: flex; background: #e5e7eb; border-radius: 12px; padding: 3px; margin: 20px auto; width: fit-content; }
         .view-opt { padding: 8px 24px; font-size: 0.9rem; cursor: pointer; border-radius: 10px; transition: 0.2s; }
         .view-opt.active { background: var(--white); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
-        /* 容器宽度 */
         .container { width: 95%; max-width: 1200px; margin: 0 auto 50px; flex: 1; }
-
-        /* 主卡片 */
         .main-card { background: var(--white); border-radius: 30px; padding: clamp(20px, 3vw, 40px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .cal-header h3 { font-size: 1.5rem; margin: 0; font-weight: 500; }
-        
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
-        .weekday-label { text-align: center; font-size: 0.9rem; color: var(--text-muted); padding-bottom: 15px; font-weight: bold; }
-
-        /* 单元格大尺寸 */
-        .day-cell { 
-            min-height: 140px; border-radius: 18px; padding: 12px; 
-            cursor: pointer; display: flex; flex-direction: column; 
-            background: #f9fafb; border: 1.5px solid transparent; overflow: hidden; 
-            transition: transform 0.2s;
-        }
+        .day-cell { min-height: 140px; border-radius: 18px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; background: #f9fafb; border: 1.5px solid transparent; overflow: hidden; transition: 0.2s; }
         .day-cell.is-today { border-color: var(--primary); background: #fff; box-shadow: 0 4px 12px rgba(92, 124, 250, 0.1); }
-        .day-cell.mark-green { background: #e6f4ea; border-bottom: 6px solid var(--st-green); }
-        .day-cell.mark-blue { background: #e8f0fe; border-bottom: 5px solid var(--st-blue); }
-        .day-cell.mark-red { background: #fce8e8; border-bottom: 6px solid var(--st-red); }
-
-        .cell-num { font-size: 1.1rem; font-weight: 700; color: #9ca3af; margin-bottom: 5px; }
-        .cell-summary { 
-            font-size: var(--font-size-sm); color: #4b5563; line-height: 1.5; 
-            font-style: italic; overflow: hidden; display: -webkit-box; 
-            -webkit-line-clamp: 5; -webkit-box-orient: vertical; 
-        }
-
-        /* 周视图适配 */
+        .day-cell.mark-green { border-bottom: 6px solid var(--st-green); }
+        .day-cell.mark-blue { border-bottom: 6px solid var(--st-blue); }
+        .day-cell.mark-red { border-bottom: 6px solid var(--st-red); }
+        .cell-num { font-size: 1.1rem; font-weight: 700; color: #9ca3af; }
+        .cell-summary { font-size: var(--font-size-sm); color: #4b5563; margin-top: 5px; font-style: italic; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
         .week-view-row { display: flex !important; flex-direction: row !important; align-items: center !important; min-height: 80px !important; margin-bottom: 12px; padding: 15px 25px !important; gap: 30px; }
-        .week-view-row .cell-num { width: 120px; margin: 0; }
-
-        /* 编辑视图 */
         .editor-card { background: var(--white); border-radius: 30px; padding: clamp(20px, 4vw, 50px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
-        .task-row { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f3f4f6; }
-        .task-no { font-family: monospace; width: 45px; color: var(--primary); font-weight: bold; font-size: 1.1rem; }
-        .task-input { flex: 1; border: none; outline: none; font-size: 1.1rem; background: transparent; }
+        .task-row { display: flex; align-items: center; padding: 14px; border-bottom: 1px solid #f3f4f6; background: white; cursor: grab; }
+        .task-index { font-family: monospace; font-weight: bold; color: var(--primary); width: 30px; }
+        .task-input { flex: 1; border: none; outline: none; font-size: 1.1rem; background: transparent; padding: 0 10px; }
+        .task-input.completed { text-decoration: line-through; color: var(--text-muted); }
+        .task-checkbox { width: 24px; height: 24px; border: 2.5px solid #ddd; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .task-checkbox.checked { background: var(--primary); border-color: var(--primary); }
+        .task-checkbox.checked::after { content: '✓'; color: white; font-size: 14px; }
+        .task-del { color: #eee; cursor: pointer; margin-left: 15px; }
         .save-btn { width: 100%; max-width: 400px; display: block; margin: 40px auto 0; padding: 18px; background: var(--text-main); color: #fff; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
-        
         .sync-status { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-top: 20px; }
-
-        @media (max-width: 768px) {
-            .day-cell { min-height: 100px; padding: 6px; }
-            .cal-header h3 { font-size: 1.1rem; }
-            .navbar { gap: 10px; }
-        }
+        @media (max-width: 768px) { .day-cell { min-height: 100px; } .nav-btn { padding: 8px 15px; } }
     </style>
 </head>
-<body onbeforeunload="return checkDirty(event)">
+<body>
 
     <nav class="navbar">
-        <button class="nav-btn active" id="nav-home" onclick="handleNav('home')">拾光首页</button>
+        <button class="nav-btn active" id="nav-home" onclick="handleNav('home')">首页月历</button>
         <button class="nav-btn" id="nav-today" onclick="handleNav('editor')">当日任务</button>
     </nav>
 
     <div class="container">
         <div id="view-home">
             <div class="view-selector">
-                <div class="view-opt active" id="opt-month" onclick="changeHomeView('month')">月视图</div>
+                <div class="view-opt" id="opt-month" onclick="changeHomeView('month')">月视图</div>
                 <div class="view-opt" id="opt-week" onclick="changeHomeView('week')">周视图</div>
             </div>
-
             <div class="main-card">
                 <div class="cal-header">
-                    <button onclick="moveTime(-1)" style="border:none;background:none;font-size:1.8rem;cursor:pointer;color:var(--text-muted);">⇠</button>
-                    <h3 id="time-label">2025 . 12</h3>
-                    <button onclick="moveTime(1)" style="border:none;background:none;font-size:1.8rem;cursor:pointer;color:var(--text-muted);">⇢</button>
+                    <button onclick="moveTime(-1)" style="border:none;background:none;font-size:1.8rem;">⇠</button>
+                    <h3 id="time-label">正在连接...</h3>
+                    <button onclick="moveTime(1)" style="border:none;background:none;font-size:1.8rem;">⇢</button>
                 </div>
-                <div class="weekday-labels" id="weekday-labels" style="display:grid; grid-template-columns: repeat(7, 1fr);">
-                    <div class="weekday-label">星期一</div><div class="weekday-label">星期二</div><div class="weekday-label">星期三</div>
-                    <div class="weekday-label">星期四</div><div class="weekday-label">星期五</div><div class="weekday-label">星期六</div><div class="weekday-label">星期日</div>
+                <div id="weekday-labels" style="display:grid; grid-template-columns: repeat(7, 1fr); text-align:center; font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">
+                    <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
                 </div>
                 <div id="display-grid" class="grid"></div>
-                <div class="sync-status" id="sync-status">正在检查云端同步...</div>
+                <div class="sync-status" id="sync-status">离线模式</div>
             </div>
         </div>
 
         <div id="view-editor" style="display:none">
             <div class="editor-card">
-                <span style="color:var(--text-muted); cursor:pointer; font-size:1rem; border-bottom:1px solid #eee; padding-bottom:5px;" onclick="handleNav('home')">← 返回首页</span>
-                <h2 id="edit-date-title" style="text-align:center; color:var(--primary); margin: 30px 0; font-size:2.5rem; font-weight:300;">12.27</h2>
-                
-                <div id="task-container" oninput="markDirty()"></div>
-                <div style="text-align:center; color:var(--text-muted); cursor:pointer; font-size:2.5rem; margin-top:20px;" onclick="renderTaskItem({}); markDirty();">+</div>
-                
-                <div style="background:#f9fafb; padding:25px; border-radius:20px; margin-top:30px; border:1px solid #f0f0f0;">
-                    <span style="font-size:0.9rem; color:var(--text-muted); font-weight:bold; display:block; margin-bottom:10px;">一句话总结</span>
-                    <input type="text" id="inp-sum" oninput="markDirty()" style="width:100%; border:none; outline:none; background:transparent; font-size:1.2rem; font-style:italic;" placeholder="记录此刻的心情或成就...">
+                <span style="color:var(--text-muted); cursor:pointer;" onclick="handleNav('home')">← 返回</span>
+                <h2 id="edit-date-title" style="text-align:center; color:var(--primary); margin: 20px 0;"></h2>
+                <div id="task-list"></div>
+                <div style="text-align:center; color:var(--text-muted); cursor:pointer; font-size:2rem; margin-top:10px;" onclick="addTask()">+</div>
+                <div style="background:#f9fafb; padding:20px; border-radius:20px; margin-top:20px;">
+                    <input type="text" id="inp-sum" style="width:100%; border:none; outline:none; background:transparent; font-size:1.1rem;" placeholder="今日一句话总结...">
                 </div>
-
-                <div style="background:#f9fafb; padding:25px; border-radius:20px; margin-top:20px; border:1px solid #f0f0f0;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><span style="font-size:0.9rem; font-weight:bold;">今日评价</span><span style="font-size:0.85rem; color:var(--danger); cursor:pointer;" onclick="selectTag(''); markDirty();">重置</span></div>
-                    <div style="display:flex; gap:15px;">
-                        <div class="tag-pill" style="flex:1; border:1.5px solid #eee; text-align:center; padding:15px; border-radius:15px; cursor:pointer; background:white;" data-tag="green" onclick="selectTag('green'); markDirty();">🌿 充实</div>
-                        <div class="tag-pill" style="flex:1; border:1.5px solid #eee; text-align:center; padding:15px; border-radius:15px; cursor:pointer; background:white;" data-tag="blue" onclick="selectTag('blue'); markDirty();">💧 平稳</div>
-                        <div class="tag-pill" style="flex:1; border:1.5px solid #eee; text-align:center; padding:15px; border-radius:15px; cursor:pointer; background:white;" data-tag="red" onclick="selectTag('red'); markDirty();">🍂 低迷</div>
-                    </div>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <div class="tag-pill" style="flex:1; border:1px solid #eee; text-align:center; padding:12px; border-radius:12px; cursor:pointer;" data-tag="green" onclick="selectTag('green')">🌿 充实</div>
+                    <div class="tag-pill" style="flex:1; border:1px solid #eee; text-align:center; padding:12px; border-radius:12px; cursor:pointer;" data-tag="blue" onclick="selectTag('blue')">💧 平稳</div>
+                    <div class="tag-pill" style="flex:1; border:1px solid #eee; text-align:center; padding:12px; border-radius:12px; cursor:pointer;" data-tag="red" onclick="selectTag('red')">🍂 低迷</div>
                 </div>
-                <button class="save-btn" id="btn-save" onclick="saveData()">确认保存并同步</button>
+                <button class="save-btn" id="btn-save" onclick="saveData()">确认保存</button>
             </div>
         </div>
     </div>
 
 <script>
-    // --- 配置区 ---
-    const STORAGE_KEY = 'TIME_STATION_SYNC_V3';
-    AV.init({
-        appId: "bcAx6bqlbWuUW6pVaBwRyRWU-gzGzoHsz",
-        appKey: "cmzEQp0JhWvP7qNLd90hHKW2",
-        serverURL: "https://bcax6bql.lc-cn-n1-shared.com"
-    });
+    // --- 初始化 ---
+    const APP_ID = "bcAx6bqlbWuUW6pVaBwRyRWU-gzGzoHsz";
+    const APP_KEY = "cmzEQp0JhWvP7qNLd90hHKW2";
+    const SERVER_URL = "https://bcax6bql.lc-cn-n1-shared.com";
+    AV.init({ appId: APP_ID, appKey: APP_KEY, serverURL: SERVER_URL });
 
-    const POEMS = [
-        "海上生明月，天涯共此时。——张九龄", "欲穷千里目，更上一层楼。——王之涣",
-        "行到水穷处，坐看云起时。——王维", "明月松间照，清泉石上流。——王维",
-        "山重水复疑无路，柳暗花明又一村。——陆游", "大漠孤烟直，长河落日圆。——王维",
-        "春江潮水连海平，海上明月共潮生。——张若虚", "落霞与孤鹜齐飞，秋水共长天一色。——王勃",
-        "此曲只应天上有，人间能得几回闻。——杜甫", "两岸猿声啼不住，轻舟已过万重山。——李白"
-    ];
+    let db = JSON.parse(localStorage.getItem('TIME_STATION_V6')) || {};
+    let anchorDate = new Date();
+    let editingKey = ""; 
+    let activeTag = ""; 
+    let snapshot = ""; // 用于检测是否有修改的镜像
+    
+    const isMobile = /Android|iPhone/i.test(navigator.userAgent);
+    let currentMode = isMobile ? 'week' : 'month';
 
-    let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-    let currentMode = 'month'; let anchorDate = new Date();
-    let editingKey = ""; let activeTag = ""; let isDirty = false;
-
-    // --- 同步逻辑 ---
     window.onload = function() {
         renderUI();
         pullFromCloud();
+        Sortable.create(document.getElementById('task-list'), { animation: 150, onEnd: updateIndices });
+        // 预热连接
+        AV.Cloud.getServerDate().catch(()=>{});
     };
 
+    // --- 云端核心 ---
     async function pullFromCloud() {
-        const statusEl = document.getElementById('sync-status');
-        if (!statusEl) return;
-        statusEl.innerText = "☁️ 正在检查同步...";
-        
-        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+        const status = document.getElementById('sync-status');
         try {
-            const query = new AV.Query('CalendarLog');
-            query.equalTo('user_id', 'default_user');
-            const result = await Promise.race([query.first(), timeout]);
-            
+            const query = new AV.Query('CalendarLog').equalTo('user_id', 'default_user');
+            const result = await Promise.race([query.first(), new Promise((_, r) => setTimeout(() => r('timeout'), 5000))]);
             if (result) {
-                const cloudContent = result.get('content');
-                if (cloudContent) {
-                    db = JSON.parse(cloudContent);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-                    renderUI();
-                    statusEl.innerText = "✨ 云端数据已同步";
-                }
-            } else { statusEl.innerText = "📅 暂无云端存档"; }
-        } catch (e) {
-            console.error(e);
-            statusEl.innerText = "⚠️ 同步异常，当前使用本地模式";
-        }
+                db = JSON.parse(result.get('content'));
+                localStorage.setItem('TIME_STATION_V6', JSON.stringify(db));
+                renderUI();
+                status.innerText = "✨ 云端已同步";
+            }
+        } catch (e) { status.innerText = "🌙 离线模式"; }
     }
 
     async function pushToCloud() {
         try {
-            const query = new AV.Query('CalendarLog');
-            query.equalTo('user_id', 'default_user');
-            let log = await query.first();
-            if (!log) {
-                const CalendarLog = AV.Object.extend('CalendarLog');
-                log = new CalendarLog();
-            }
-            log.set('user_id', 'default_user');
+            const query = new AV.Query('CalendarLog').equalTo('user_id', 'default_user');
+            let log = await query.first() || new (AV.Object.extend('CalendarLog'))({ user_id: 'default_user' });
             log.set('content', JSON.stringify(db));
             await log.save();
-        } catch (e) { console.error("Cloud Push Failed"); }
+            document.getElementById('sync-status').innerText = "✨ 同步于 " + new Date().toLocaleTimeString();
+        } catch (e) { document.getElementById('sync-status').innerText = "⚠️ 后台保存失败"; }
     }
 
-    // --- 渲染逻辑 ---
+    // --- 界面逻辑 ---
     function renderUI() {
-        if (currentMode === 'month') renderMonthView();
-        else renderWeekView();
-    }
-
-    function changeHomeView(mode) {
-        currentMode = mode;
-        document.getElementById('opt-month').classList.toggle('active', mode === 'month');
-        document.getElementById('opt-week').classList.toggle('active', mode === 'week');
-        document.getElementById('weekday-labels').style.display = mode === 'month' ? 'grid' : 'none';
-        renderUI();
-    }
-
-    function renderMonthView() {
-        const grid = document.getElementById('display-grid'); 
-        grid.innerHTML = ""; grid.style.gridTemplateColumns = "repeat(7, 1fr)";
+        const grid = document.getElementById('display-grid'); grid.innerHTML = "";
         const y = anchorDate.getFullYear(), m = anchorDate.getMonth();
-        document.getElementById('time-label').innerText = y + " 年 " + (m + 1) + " 月";
-        
-        let firstDay = new Date(y, m, 1).getDay();
-        firstDay = firstDay === 0 ? 6 : firstDay - 1;
-        const totalDays = new Date(y, m+1, 0).getDate();
         const now = new Date(); now.setHours(0,0,0,0);
 
-        for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
-        for(let d=1; d<=totalDays; d++) {
-            const dateObj = new Date(y, m, d);
-            const key = y + "-" + (m + 1) + "-" + d;
-            grid.appendChild(createCell(dateObj, key, now));
-        }
-    }
-
-    function renderWeekView() {
-        const grid = document.getElementById('display-grid'); 
-        grid.innerHTML = ""; grid.style.gridTemplateColumns = "1fr";
-        const now = new Date(); now.setHours(0,0,0,0);
-        let start = new Date(anchorDate);
-        let day = start.getDay() || 7;
-        start.setDate(start.getDate() - day + 1);
-        document.getElementById('time-label').innerText = "本周拾光回顾";
-
-        for(let i=0; i<7; i++) {
-            let dateObj = new Date(start);
-            dateObj.setDate(start.getDate() + i);
-            const key = dateObj.getFullYear() + "-" + (dateObj.getMonth() + 1) + "-" + dateObj.getDate();
-            const cell = createCell(dateObj, key, now);
-            cell.classList.add('week-view-row');
-            grid.appendChild(cell);
+        if (currentMode === 'month') {
+            document.getElementById('time-label').innerText = `${y}年${m+1}月`;
+            let first = (new Date(y, m, 1).getDay() || 7) - 1;
+            for(let i=0; i<first; i++) grid.appendChild(document.createElement('div'));
+            for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
+                grid.appendChild(createCell(new Date(y, m, d), `${y}-${m+1}-${d}`, now));
+            }
+        } else {
+            document.getElementById('time-label').innerText = "本周";
+            let start = new Date(anchorDate); start.setDate(start.getDate() - (start.getDay() || 7) + 1);
+            for(let i=0; i<7; i++) {
+                let d = new Date(start); d.setDate(start.getDate() + i);
+                let cell = createCell(d, `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`, now);
+                cell.classList.add('week-view-row');
+                grid.appendChild(cell);
+            }
         }
     }
 
     function createCell(dateObj, key, now) {
         const data = db[key] || {};
         const cell = document.createElement('div');
-        const isFuture = dateObj > now;
-        const isToday = dateObj.getTime() === now.getTime();
-        
-        let summaryDisplay = data.summary || "";
-        if (!isFuture && !isToday && !data.manual) {
-            summaryDisplay = POEMS[Math.abs(dateObj.getDate() + dateObj.getMonth()) % POEMS.length];
-        }
-
-        cell.className = "day-cell " + (isToday ? "is-today " : "") + (data.tag ? "mark-" + data.tag : "");
-        cell.onclick = function() {
-            if(isDirty && !confirm("放弃当前修改？")) return;
-            openEditor(key);
-        };
-        
-        const weekNames = ['周日','周一','周二','周三','周四','周五','周六'];
-        const label = currentMode === 'week' ? (dateObj.getMonth() + 1) + "/" + dateObj.getDate() + " " + weekNames[dateObj.getDay()] : dateObj.getDate();
-
-        cell.innerHTML = "<div class='cell-num'>" + label + "</div><div class='cell-summary'>" + (isFuture ? "" : summaryDisplay) + "</div>";
+        cell.className = `day-cell ${dateObj.getTime()===now.getTime()?'is-today':''} ${data.tag?'mark-'+data.tag:''}`;
+        const label = currentMode==='week' ? `${dateObj.getMonth()+1}/${dateObj.getDate()} 周${['日','一','二','三','四','五','六'][dateObj.getDay()]}` : dateObj.getDate();
+        cell.innerHTML = `<div class="cell-num">${label}</div><div class="cell-summary">${data.summary || ""}</div>`;
+        cell.onclick = () => openEditor(key);
         return cell;
     }
 
     function openEditor(key) {
-        editingKey = key; isDirty = false;
+        editingKey = key;
         const data = db[key] || { tasks: [], summary: "", tag: "" };
-        const parts = key.split('-');
-        document.getElementById('edit-date-title').innerText = parts[0] + "年" + parts[1] + "月" + parts[2] + "日";
-        const container = document.getElementById('task-container'); container.innerHTML = "";
-        const tasks = data.tasks && data.tasks.length > 0 ? data.tasks : [{},{},{}];
-        tasks.forEach(t => renderTaskItem(t));
-        document.getElementById('inp-sum').value = data.manual ? data.summary : "";
+        document.getElementById('edit-date-title').innerText = key.replace(/-/g, ' / ');
+        const list = document.getElementById('task-list'); list.innerHTML = "";
+        
+        // 如果没有任务，默认给一行空的，但不计入 snapshot，防止误触
+        const displayTasks = data.tasks.length ? data.tasks : [{text:'', done:false}];
+        displayTasks.forEach(t => addTask(t));
+        
+        document.getElementById('inp-sum').value = data.summary || "";
         selectTag(data.tag || '');
-        switchView('editor');
+        
+        // **快照：记录进入时的状态**
+        snapshot = getEditorStateString();
+
+        document.getElementById('view-home').style.display = 'none';
+        document.getElementById('view-editor').style.display = 'block';
+        document.getElementById('nav-home').classList.remove('active');
+        document.getElementById('nav-today').classList.add('active');
     }
 
-    function renderTaskItem(t) {
-        const wrap = document.createElement('div');
-        wrap.className = 'task-row';
-        wrap.innerHTML = "<span class='task-no'>00</span><input type='text' class='task-input' value='" + (t.text || "") + "' placeholder='录入待办...'><span style='color:#ccc;cursor:pointer;' onclick='this.parentElement.remove();updateIndices();markDirty();'>✕</span>";
-        document.getElementById('task-container').appendChild(wrap);
+    // 获取当前编辑页所有数据的字符串形式，用于比对
+    function getEditorStateString() {
+        const tasks = Array.from(document.querySelectorAll('.task-row')).map(row => ({
+            text: row.querySelector('.task-input').value,
+            done: row.querySelector('.task-checkbox').classList.contains('checked')
+        })).filter(t => t.text.trim());
+        const sum = document.getElementById('inp-sum').value.trim();
+        return JSON.stringify({ tasks, sum, tag: activeTag });
+    }
+
+    function addTask(t = {text: '', done: false}) {
+        const row = document.createElement('div');
+        row.className = 'task-row';
+        row.innerHTML = `
+            <div class="task-index"></div>
+            <input type="text" class="task-input ${t.done?'completed':''}" value="${t.text}" placeholder="写点什么...">
+            <div class="task-checkbox ${t.done?'checked':''}" onclick="toggleDone(this)"></div>
+            <div class="task-del" onclick="this.parentElement.remove();updateIndices();">✕</div>
+        `;
+        document.getElementById('task-list').appendChild(row);
         updateIndices();
     }
 
-    function updateIndices() { 
-        document.querySelectorAll('.task-no').forEach((el, i) => el.innerText = String(i + 1).padStart(2, '0')); 
+    function updateIndices() {
+        document.querySelectorAll('.task-index').forEach((el, i) => el.innerText = String(i+1).padStart(2,'0'));
     }
 
-    function selectTag(t) { 
-        activeTag = t; 
+    function toggleDone(el) {
+        el.classList.toggle('checked');
+        el.previousElementSibling.classList.toggle('completed');
+    }
+
+    function selectTag(t) {
+        activeTag = t;
         document.querySelectorAll('.tag-pill').forEach(p => {
-            const isActive = p.dataset.tag === t;
-            p.style.background = isActive ? 'var(--primary)' : 'white';
-            p.style.color = isActive ? 'white' : 'var(--text-main)';
-            p.style.borderColor = isActive ? 'var(--primary)' : '#eee';
+            p.style.background = p.dataset.tag === t ? 'var(--primary)' : '#fff';
+            p.style.color = p.dataset.tag === t ? '#fff' : '#000';
         });
     }
 
-    function markDirty() { isDirty = true; }
-    function checkDirty(e) { if(isDirty){ e.preventDefault(); e.returnValue=''; } }
-
     async function saveData() {
-        const taskInputs = document.querySelectorAll('.task-input');
-        const tasks = Array.from(taskInputs).map(i => ({ text: i.value })).filter(t => t.text.trim());
-        const manualSum = document.getElementById('inp-sum').value.trim();
+        const tasks = Array.from(document.querySelectorAll('.task-row')).map(row => ({
+            text: row.querySelector('.task-input').value,
+            done: row.querySelector('.task-checkbox').classList.contains('checked')
+        })).filter(t => t.text.trim());
         
-        db[editingKey] = { tasks, summary: manualSum, manual: !!manualSum, tag: activeTag };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-        isDirty = false;
+        const sum = document.getElementById('inp-sum').value.trim();
+        db[editingKey] = { tasks, summary: sum, tag: activeTag };
+        localStorage.setItem('TIME_STATION_V6', JSON.stringify(db));
         
-        const btn = document.getElementById('btn-save');
-        btn.innerText = "☁️ 正在保存同步...";
-        await pushToCloud();
-        btn.innerText = "确认保存并同步";
-        switchView('home');
+        // 更新 snapshot 避免离开时提示
+        snapshot = getEditorStateString();
+        
+        document.getElementById('sync-status').innerText = "☁️ 正在同步...";
+        handleNav('home');
+        pushToCloud();
     }
 
-    function handleNav(v) {
-        if(isDirty && !confirm("放弃修改？")) return;
-        isDirty = false;
-        if(v === 'home') switchView('home');
-        else {
+    function handleNav(target) {
+        if (target === 'home') {
+            // 如果在编辑器，检查修改
+            if (document.getElementById('view-editor').style.display === 'block') {
+                if (getEditorStateString() !== snapshot) {
+                    if (!confirm("修改尚未保存，确定离开吗？")) return;
+                }
+            }
+            document.getElementById('view-home').style.display = 'block';
+            document.getElementById('view-editor').style.display = 'none';
+            document.getElementById('nav-home').classList.add('active');
+            document.getElementById('nav-today').classList.remove('active');
+            renderUI();
+        } else {
             const n = new Date();
-            openEditor(n.getFullYear() + "-" + (n.getMonth() + 1) + "-" + n.getDate());
+            openEditor(`${n.getFullYear()}-${n.getMonth()+1}-${n.getDate()}`);
         }
     }
 
-    function switchView(v) {
-        document.getElementById('view-home').style.display = v === 'home' ? 'block' : 'none';
-        document.getElementById('view-editor').style.display = v === 'editor' ? 'block' : 'none';
-        document.getElementById('nav-home').classList.toggle('active', v === 'home');
-        document.getElementById('nav-today').classList.toggle('active', v === 'editor');
-        if(v === 'home') renderUI();
+    function changeHomeView(mode) {
+        currentMode = mode;
+        document.getElementById('opt-month').classList.toggle('active', mode==='month');
+        document.getElementById('opt-week').classList.toggle('active', mode==='week');
+        document.getElementById('weekday-labels').style.display = mode==='month' ? 'grid' : 'none';
+        renderUI();
     }
 
     function moveTime(s) {
-        if (currentMode === 'month') anchorDate.setMonth(anchorDate.getMonth() + s);
-        else anchorDate.setDate(anchorDate.getDate() + s * 7);
+        if(currentMode==='month') anchorDate.setMonth(anchorDate.getMonth()+s);
+        else anchorDate.setDate(anchorDate.getDate()+s*7);
         renderUI();
     }
 </script>
